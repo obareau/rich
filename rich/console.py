@@ -783,8 +783,7 @@ class Console:
                 return ColorSystem.TRUECOLOR
             term = self._environ.get("TERM", "").strip().lower()
             _term_name, _hyphen, colors = term.rpartition("-")
-            color_system = _TERM_COLORS.get(colors, ColorSystem.STANDARD)
-            return color_system
+            return _TERM_COLORS.get(colors, ColorSystem.STANDARD)
 
     def _enter_buffer(self) -> None:
         """Enter in to a buffer context, and buffer all output."""
@@ -1063,8 +1062,7 @@ class Console:
         Returns:
             Capture: Context manager with disables writing to the terminal.
         """
-        capture = Capture(self)
-        return capture
+        return Capture(self)
 
     def pager(
         self, pager: Optional[Pager] = None, styles: bool = False, links: bool = False
@@ -1133,7 +1131,7 @@ class Console:
         """
         from .status import Status
 
-        status_renderable = Status(
+        return Status(
             status,
             console=self,
             spinner=spinner,
@@ -1141,7 +1139,6 @@ class Console:
             speed=speed,
             refresh_per_second=refresh_per_second,
         )
-        return status_renderable
 
     def show_cursor(self, show: bool = True) -> bool:
         """Show or hide the cursor.
@@ -1244,8 +1241,7 @@ class Console:
         Returns:
             Measurement: A measurement of the renderable.
         """
-        measurement = Measurement.get(self, options or self.options, renderable)
-        return measurement
+        return Measurement.get(self, options or self.options, renderable)
 
     def render(
         self, renderable: RenderableType, options: Optional[ConsoleOptions] = None
@@ -1667,12 +1663,11 @@ class Console:
                             render(renderable, render_options), self.get_style(style)
                         )
                     )
-            if new_line_start:
-                if (
-                    len("".join(segment.text for segment in new_segments).splitlines())
-                    > 1
-                ):
-                    new_segments.insert(0, Segment.line())
+            if new_line_start and (
+                len("".join(segment.text for segment in new_segments).splitlines())
+                > 1
+            ):
+                new_segments.insert(0, Segment.line())
             if crop:
                 buffer_extend = self._buffer.extend
                 for line in Segment.split_and_crop_lines(
@@ -1725,11 +1720,7 @@ class Console:
                 default=default,
                 sort_keys=sort_keys,
             )
-        else:
-            if not isinstance(json, str):
-                raise TypeError(
-                    f"json must be str. Did you mean print_json(data={json!r}) ?"
-                )
+        elif isinstance(json, str):
             json_renderable = JSON(
                 json,
                 indent=indent,
@@ -1740,6 +1731,10 @@ class Console:
                 allow_nan=allow_nan,
                 default=default,
                 sort_keys=sort_keys,
+            )
+        else:
+            raise TypeError(
+                f"json must be str. Did you mean print_json(data={json!r}) ?"
             )
         self.print(json_renderable, soft_wrap=True)
 
@@ -1969,7 +1964,6 @@ class Console:
                     from .jupyter import display
 
                     display(self._buffer, self._render_buffer(self._buffer[:]))
-                    del self._buffer[:]
                 else:
                     if WINDOWS:
                         use_legacy_windows_render = False
@@ -2008,7 +2002,8 @@ class Console:
                             raise
 
                     self.file.flush()
-                    del self._buffer[:]
+
+                del self._buffer[:]
 
     def _render_buffer(self, buffer: Iterable[Segment]) -> str:
         """Render buffered output, and clear buffer."""
@@ -2031,8 +2026,7 @@ class Console:
             elif not (not_terminal and control):
                 append(text)
 
-        rendered = "".join(output)
-        return rendered
+        return "".join(output)
 
     def input(
         self,
@@ -2060,13 +2054,9 @@ class Console:
         if prompt:
             self.print(prompt, markup=markup, emoji=emoji, end="")
         if password:
-            result = getpass("", stream=stream)
+            return getpass("", stream=stream)
         else:
-            if stream:
-                result = stream.readline()
-            else:
-                result = input()
-        return result
+            return stream.readline() if stream else input()
 
     def export_text(self, *, clear: bool = True, styles: bool = False) -> str:
         """Generate text from console contents (requires record=True argument in constructor).
@@ -2249,7 +2239,6 @@ class Console:
             """Convert a Style to CSS rules for SVG."""
             if style in style_cache:
                 return style_cache[style]
-            css_rules = []
             color = (
                 _theme.foreground_color
                 if (style.color is None or style.color.is_default)
@@ -2264,7 +2253,7 @@ class Console:
                 color, bgcolor = bgcolor, color
             if style.dim:
                 color = blend_rgb(color, bgcolor, 0.4)
-            css_rules.append(f"fill: {color.hex}")
+            css_rules = [f"fill: {color.hex}"]
             if style.bold:
                 css_rules.append("font-weight: bold")
             if style.italic:
@@ -2315,9 +2304,7 @@ class Console:
             """Make a tag from name, content, and attributes."""
 
             def stringify(value: object) -> str:
-                if isinstance(value, (float)):
-                    return format(value, "g")
-                return str(value)
+                return format(value, "g") if isinstance(value, (float)) else str(value)
 
             tag_attribs = " ".join(
                 f'{k.lstrip("_").replace("_", "-")}="{stringify(v)}"'

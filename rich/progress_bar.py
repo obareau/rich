@@ -148,10 +148,9 @@ class ProgressBar(JupyterMixin):
         current_time = (
             monotonic() if self.animation_time is None else self.animation_time
         )
-        segments = pulse_segments * (int(width / segment_count) + 2)
+        segments = pulse_segments * (width // segment_count + 2)
         offset = int(-current_time * 15) % segment_count
-        segments = segments[offset : offset + width]
-        yield from segments
+        yield from segments[offset : offset + width]
 
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
@@ -159,8 +158,7 @@ class ProgressBar(JupyterMixin):
 
         width = min(self.width or options.max_width, options.max_width)
         ascii = options.legacy_windows or options.ascii_only
-        should_pulse = self.pulse or self.total is None
-        if should_pulse:
+        if should_pulse := self.pulse or self.total is None:
             yield from self._render_pulse(console, width, ascii=ascii)
             return
 
@@ -215,7 +213,7 @@ if __name__ == "__main__":  # pragma: no cover
     import time
 
     console.show_cursor(False)
-    for n in range(0, 101, 1):
+    for n in range(101):
         bar.update(n)
         console.print(bar)
         console.file.write("\r")

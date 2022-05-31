@@ -585,12 +585,11 @@ class SpinnerColumn(ProgressColumn):
         self.spinner = Spinner(spinner_name, style=spinner_style, speed=speed)
 
     def render(self, task: "Task") -> RenderableType:
-        text = (
+        return (
             self.finished_text
             if task.finished
             else self.spinner.render(task.get_time())
         )
-        return text
 
 
 class TextColumn(ProgressColumn):
@@ -888,8 +887,7 @@ class DownloadColumn(ProgressColumn):
             total_str = "?"
 
         download_status = f"{completed_str}/{total_str} {suffix}"
-        download_text = Text(download_status, style="progress.download")
-        return download_text
+        return Text(download_status, style="progress.download")
 
 
 class TransferSpeedColumn(ProgressColumn):
@@ -973,9 +971,7 @@ class Task:
     @property
     def remaining(self) -> Optional[float]:
         """Optional[float]: Get the number of steps remaining, if a non-None total was set."""
-        if self.total is None:
-            return None
-        return self.total - self.completed
+        return None if self.total is None else self.total - self.completed
 
     @property
     def elapsed(self) -> Optional[float]:
@@ -1015,8 +1011,7 @@ class Task:
             iter_progress = iter(progress)
             next(iter_progress)
             total_completed = sum(sample.completed for sample in iter_progress)
-            speed = total_completed / total_time
-            return speed
+            return total_completed / total_time
 
     @property
     def time_remaining(self) -> Optional[float]:
@@ -1029,8 +1024,7 @@ class Task:
         remaining = self.remaining
         if remaining is None:
             return None
-        estimate = ceil(remaining / speed)
-        return estimate
+        return ceil(remaining / speed)
 
     def _reset(self) -> None:
         """Reset progress."""
@@ -1142,9 +1136,11 @@ class Progress(JupyterMixin):
     def finished(self) -> bool:
         """Check if all tasks have been completed."""
         with self._lock:
-            if not self._tasks:
-                return True
-            return all(task.finished for task in self._tasks.values())
+            return (
+                all(task.finished for task in self._tasks.values())
+                if self._tasks
+                else True
+            )
 
     def start(self) -> None:
         """Start the progress display."""
@@ -1246,8 +1242,9 @@ class Progress(JupyterMixin):
                 total_bytes = self._tasks[task_id].total
         if total_bytes is None:
             raise ValueError(
-                f"unable to get the total number of bytes, please specify 'total'"
+                "unable to get the total number of bytes, please specify 'total'"
             )
+
 
         # update total of task or create new task
         if task_id is None:
@@ -1334,7 +1331,7 @@ class Progress(JupyterMixin):
                 RuntimeWarning,
             )
             buffering = -1
-        elif _mode == "rt" or _mode == "r":
+        elif _mode in {"rt", "r"}:
             if buffering == 0:
                 raise ValueError("can't have unbuffered text I/O")
             elif buffering == 1:
@@ -1355,7 +1352,7 @@ class Progress(JupyterMixin):
         reader = _Reader(handle, self, task_id, close_handle=True)
 
         # wrap the reader in a `TextIOWrapper` if text mode
-        if mode == "r" or mode == "rt":
+        if mode in ["r", "rt"]:
             return io.TextIOWrapper(
                 reader,
                 encoding=encoding,
@@ -1530,13 +1527,11 @@ class Progress(JupyterMixin):
 
     def get_renderable(self) -> RenderableType:
         """Get a renderable for the progress display."""
-        renderable = Group(*self.get_renderables())
-        return renderable
+        return Group(*self.get_renderables())
 
     def get_renderables(self) -> Iterable[RenderableType]:
         """Get a number of renderables for the progress display."""
-        table = self.make_tasks_table(self.tasks)
-        yield table
+        yield self.make_tasks_table(self.tasks)
 
     def make_tasks_table(self, tasks: Iterable[Task]) -> Table:
         """Get a table to render the Progress display.

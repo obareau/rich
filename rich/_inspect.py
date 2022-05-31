@@ -70,8 +70,7 @@ class Inspect(JupyterMixin):
             if (isclass(obj) or callable(obj) or ismodule(obj))
             else str(type(obj))
         )
-        title_text = self.highlighter(title_str)
-        return title_text
+        return self.highlighter(title_str)
 
     def __rich__(self) -> Panel:
         return Panel.fit(
@@ -84,7 +83,7 @@ class Inspect(JupyterMixin):
     def _get_signature(self, name: str, obj: Any) -> Optional[Text]:
         """Get a signature for a callable."""
         try:
-            _signature = str(signature(obj)) + ":"
+            _signature = f"{str(signature(obj))}:"
         except ValueError:
             _signature = "(...)"
         except TypeError:
@@ -105,18 +104,12 @@ class Inspect(JupyterMixin):
         qualname = name or getattr(obj, "__qualname__", name)
 
         # If obj is a module, there may be classes (which are callable) to display
-        if inspect.isclass(obj):
-            prefix = "class"
-        else:
-            prefix = "def"
-
-        qual_signature = Text.assemble(
+        prefix = "class" if inspect.isclass(obj) else "def"
+        return Text.assemble(
             (f"{prefix} ", f"inspect.{prefix}"),
             (qualname, "inspect.callable"),
             signature_text,
         )
-
-        return qual_signature
 
     def _render(self) -> Iterable[RenderableType]:
         """Render object."""

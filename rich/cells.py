@@ -18,7 +18,7 @@ def cell_len(text: str, _cache: Dict[str, int] = LRUCache(1024 * 4)) -> int:
     Returns:
         int: Get the number of cells required to display text.
     """
-    cached_result = _cache.get(text, None)
+    cached_result = _cache.get(text)
     if cached_result is not None:
         return cached_result
 
@@ -97,7 +97,7 @@ def set_cell_size(text: str, total: int) -> str:
         before = text[: pos + 1]
         before_len = cell_len(before)
         if before_len == total + 1 and cell_len(before[-1]) == 2:
-            return before[:-1] + " "
+            return f"{before[:-1]} "
         if before_len == total:
             return before
         if before_len > total:
