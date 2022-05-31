@@ -138,10 +138,10 @@ class Segment(NamedTuple):
                     _Segment(text[pos:], style, control),
                 )
             if cell_pos > cut:
-                return (
-                    _Segment(before[: pos - 1] + " ", style, control),
-                    _Segment(" " + text[pos:], style, control),
+                return _Segment(f"{before[: pos - 1]} ", style, control), _Segment(
+                    f" {text[pos:]}", style, control
                 )
+
 
         raise AssertionError("Will never reach here")
 
@@ -330,12 +330,11 @@ class Segment(NamedTuple):
         line_length = sum(segment.cell_length for segment in line)
         new_line: List[Segment]
 
-        if line_length < length:
-            if pad:
-                new_line = line + [cls(" " * (length - line_length), style)]
-            else:
-                new_line = line[:]
-        elif line_length > length:
+        if line_length < length and pad:
+            new_line = line + [cls(" " * (length - line_length), style)]
+        elif line_length < length or line_length <= length:
+            new_line = line[:]
+        else:
             new_line = []
             append = new_line.append
             line_length = 0
@@ -349,8 +348,6 @@ class Segment(NamedTuple):
                     text = set_cell_size(text, length - line_length)
                     append(cls(text, segment_style))
                     break
-        else:
-            new_line = line[:]
         return new_line
 
     @classmethod
@@ -377,7 +374,7 @@ class Segment(NamedTuple):
             Tuple[int, int]: Width and height in characters.
         """
         get_line_length = cls.get_line_length
-        max_width = max(get_line_length(line) for line in lines) if lines else 0
+        max_width = max((get_line_length(line) for line in lines), default=0)
         return (max_width, len(lines))
 
     @classmethod
@@ -615,10 +612,7 @@ class Segment(NamedTuple):
         for segment in segments:
             text, _style, control = segment
             while text:
-                if control:
-                    end_pos = pos
-                else:
-                    end_pos = pos + _cell_len(text)
+                end_pos = pos if control else pos + _cell_len(text)
                 if end_pos < cut:
                     add_segment(segment)
                     pos = end_pos

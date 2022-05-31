@@ -57,9 +57,7 @@ def auto(
                         key, value, *default = arg
                         if key is None:
                             append(repr(value))
-                        else:
-                            if len(default) and default[0] == value:
-                                continue
+                        elif not len(default) or default[0] != value:
                             append(f"{key}={value!r}")
                 else:
                     append(repr(arg))
@@ -117,10 +115,7 @@ def rich_repr(*, angular: bool = False) -> Callable[[Type[T]], Type[T]]:
 def rich_repr(
     cls: Optional[Type[T]] = None, *, angular: bool = False
 ) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:
-    if cls is None:
-        return auto(angular=angular)
-    else:
-        return auto(cls)
+    return auto(angular=angular) if cls is None else auto(cls)
 
 
 if __name__ == "__main__":

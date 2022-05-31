@@ -25,9 +25,8 @@ class LRUCache(OrderedDict[CacheKey, CacheValue]):
 
     def __setitem__(self, key: CacheKey, value: CacheValue) -> None:
         """Store a new views, potentially discarding an old value."""
-        if key not in self:
-            if len(self) >= self.cache_size:
-                self.popitem(last=False)
+        if key not in self and len(self) >= self.cache_size:
+            self.popitem(last=False)
         super().__setitem__(key, value)
 
     def __getitem__(self, key: CacheKey) -> CacheValue:
